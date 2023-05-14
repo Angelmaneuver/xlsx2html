@@ -1,0 +1,21 @@
+{
+	"folders": [
+		{
+			"name": "Excel to Html",
+			"path": "."
+		}
+	],
+	"settings": {
+		"editor.insertSpaces": false,
+		"editor.detectIndentation": false,
+		"files.insertFinalNewline": true,
+		"files.trimFinalNewlines": true,
+	},
+	"extensions": {
+		"recommendations": [
+			"mosapride.zenkaku",
+			"tamasfe.even-better-toml",
+			"golang.go",
+		]
+	}
+}

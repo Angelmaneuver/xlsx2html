@@ -1,0 +1,94 @@
+[Excel]
+	dataset = [
+		{ sheet = "SSR神姫リスト",         rarity = "SSR",  icon = "SSR%03d",         output = "SSR神姫リスト.html" },
+		{ sheet = "期間限定SSR神姫リスト", rarity = "SSR",  icon = "SSRLimited%03d",  output = "期間限定SSR神姫リスト.html" },
+		{ sheet = "イベントSR神姫リスト",  rarity = "SR",   icon = "SREvent%03d",     output = "イベントSR神姫リスト.html" },
+		{ sheet = "SR神姫リスト",          rarity = "SR",   icon = "SR%03d",          output = "SR神姫リスト.html" },
+		{ sheet = "期間限定SR神姫リスト",  rarity = "SR",   icon = "SRLimited%03d",   output = "期間限定SR神姫リスト.html" },
+		{ sheet = "特典SR神姫リスト",      rarity = "SR",   icon = "SRPrivilege%03d", output = "特典SR神姫リスト.html" },
+		{ sheet = "R神姫リスト",           rarity = "R",    icon = "R%03d",           output = "R神姫リスト.html" },
+		{ sheet = "期間限定R神姫リスト",   rarity = "R",    icon = "RLimited%03d",    output = "期間限定R神姫リスト.html" },
+		{ sheet = "スキンリスト",          rarity = "Skin", icon = "Skin%03d",        output = "スキンリスト.html" },
+	]
+	key    = [
+		"神姫名"
+	]
+	sort   = [
+		{ name = "神姫名 (ひらがな)", ascending = true },
+		{ name = "No",                ascending = true },
+	]
+
+	[Excel.Skip]
+		row = 3
+
+[Html]
+	headlines     = [
+	"あ", "か", "さ", "た", "な", "は", "ま", "や", "ら", "わ",
+	]
+
+	[Html.Icon]
+		base_url                   = "/kamipro/"
+		awaking                    = "a"
+		extension                  = ".jpg"
+		no_data_decision_character = "不明"
+
+	[Html.Threshold]
+		ssr  = { hp = { high = 1700, low = 1499 }, attack = { high = 8500, low = 6999 } }
+		sr   = { hp = { high = 1300, low = 999  }, attack = { high = 7000, low = 5999 } }
+		r    = { hp = { high = 800,  low = 699  }, attack = { high = 4500, low = 3999 } }
+		skin = { hp = { high = 0,    low = 0    }, attack = { high = 0,    low = 0    } }
+
+	[Html.Format]
+		start    = "<section class=\"profiles\">"
+		close    = "</section>"
+		headline = "<h3>%s</h3>"
+
+		[Html.Format.Article]
+			start = "<h4 class=\"is-style-no-change\">%s</h4><article>"
+			close = "</article>"
+
+			[Html.Format.Article.Main]
+				start   = "<div>"
+				close   = "</div>"
+				ribbon1 = "<div class=\"ribbon\"><div class=\"ribbon_left\"></div><div class=\"ribbon_right\"></div></div>"
+				ribbon2 = "<div class=\"ribbon\" style=\"--background: #ff4454;\"><div class=\"ribbon_left\"></div><div class=\"ribbon_right\" style=\"--context: 'After Awaking';\"></div></div>"
+
+				[Html.Format.Article.Main.Profile]
+					start = "<div class=\"row\">"
+					close = "</div>"	
+
+					[Html.Format.Article.Main.Profile.Detail]
+						start = "<div class=\"column\">"
+						close = "</div>"
+						icon1 = "<div class=\"icon\"><img src=\"%s\" loading=\"lazy\"></div>"
+						icon2 = "<div class=\"icon\" style=\"--align-items: center; --justify-content: center;\"><span>No Data</span></div>"
+
+						[Html.Format.Article.Main.Profile.Detail.Personal]
+							start   = "<div class=\"personal row\">"
+							close   = "</div>"
+							status  = "<div class=\"column row-rebarse\"><div class=\"status column\"><div class=\"status_headline\">属性</div><div>%s</div><div class=\"status_headline\">TYPE</div><div>%s</div><div class=\"status_headline\">HP</div><div>%s</div><div class=\"status_headline\">ATTACK</div><div>%s</div></div><div class=\"sub_headline\">Spec</div></div>"
+							profile = "<div class=\"profile\"><div class=\"headline\">Profile</div><div><p class=\"is-style-no-change\">%s</p></div></div>"
+
+					[Html.Format.Article.Main.Profile.Episode]
+						start   = "<div class=\"column\"><div class=\"episodes row\"><div class=\"episode\"><div class=\"headline\">Episode</div><div>"
+						close   = "</div></div></div></div>"
+						content = "<div class=\"headline\">%s</div><div class=\"outline\"><div class=\"column\"><div class=\"sub_headline\">%s</div><div class=\"play\"><div>%s</div></div></div><div><p>%s</p></div></div>"
+
+		[Html.Format.Attribute]
+			fire     = "<span class=\"fire\">火</span>"
+			water    = "<span class=\"water\">水</span>"
+			wind     = "<span class=\"wind\">風</span>"
+			thunder  = "<span class=\"thunder\">雷</span>"
+			light    = "<span class=\"light\">光</span>"
+			darkness = "<span class=\"darkness\">闇</span>"
+
+		[Html.Format.Type]
+			attack  = "<span class=\"attack\">Attack</span>"
+			defense = "<span class=\"defense\">Defense</span>"
+			tricky  = "<span class=\"tricky\">Tricky</span>"
+			balance = "<span class=\"balance\">Balance</span>"
+			healer  = "<span class=\"healer\">Healer</span>"
+
+		[Html.Format.Threshold]
+			higher = "<span class=\"higher\">%s</span>"
+			lower  = "<span class=\"lower\">%s</span>"
