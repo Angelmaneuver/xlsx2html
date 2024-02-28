@@ -29,6 +29,7 @@
 	[Html.Icon]
 		base_url                   = "/kamipro/"
 		awaking                    = "a"
+		otherwise                  = "o"
 		extension                  = ".jpg"
 		no_data_decision_character = "不明"
 
@@ -52,6 +53,7 @@
 				close   = "</div>"
 				ribbon1 = "<div class=\"ribbon\"><div class=\"ribbon_left\"></div><div class=\"ribbon_right\"></div></div>"
 				ribbon2 = "<div class=\"ribbon\" style=\"--background: #ff4454;\"><div class=\"ribbon_left\"></div><div class=\"ribbon_right\" style=\"--context: 'After Awaking';\"></div></div>"
+				ribbon3 = "<div class=\"ribbon\" style=\"--background: #333132;\"><div class=\"ribbon_left\"></div><div class=\"ribbon_right\" style=\"--context: 'Otherwise';\"></div></div>"
 
 				[Html.Format.Article.Main.Profile]
 					start = "<div class=\"row\">"

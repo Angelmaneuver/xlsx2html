@@ -10,7 +10,7 @@
 			"request": "launch",
 			"mode": "auto",
 			"program": "${workspaceFolder}/cmd",
-			"args": ["-i", "../神姫エピソ－ドメモ管理帳.xlsx"]
+			"args": ["-i", "../temporary/神姫エピソ－ドメモ管理帳.xlsx", "-o", "../temporary/results"]
 		}
 	]
 }

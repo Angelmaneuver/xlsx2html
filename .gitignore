@@ -20,5 +20,12 @@
 # Go workspace file
 go.work
 
+# Ignore temporary folder
+temporary/*
+!temporary/
+!temporary/results/
+temporary/results/*
+!temporary/results/.gitkeep
+
 # Ignore os manage files
 .DS_Store

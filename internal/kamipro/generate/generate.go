@@ -31,6 +31,8 @@ type Record struct {
 	HP2              interface{} `mapstructure:"HP2"`
 	Attack2          interface{} `mapstructure:"Attack2"`
 	EpisodeNumber    float64     `mapstructure:"エピソ－ド数"`
+	Awaking          string      `mapstructure:"神化覚醒"`
+	Otherwise        string      `mapstructure:"神想真化"`
 	Profile1         string      `mapstructure:"プロフィ－ル1"`
 	Profile2         string      `mapstructure:"プロフィ－ル2"`
 	Ability1         string      `mapstructure:"アビリティ1"`
@@ -102,6 +104,14 @@ func (r Record) TypeWithHtml(format *application.Type) string {
 	default:
 		return r.Type
 	}
+}
+
+func (r Record) IsAwaking() bool {
+	return r.Awaking == "TRUE"
+}
+
+func (r Record) IsOtherwise() bool {
+	return r.Otherwise == "TRUE"
 }
 
 func (r Record) IsGet() bool {
@@ -328,7 +338,7 @@ func article(
 			return "", err
 		}
 
-		_, err = sb.WriteString(reflect.ValueOf(format.Article.Main).FieldByName(fmt.Sprintf("Ribbon%d", i)).String())
+		_, err = sb.WriteString(reflect.ValueOf(format.Article.Main).FieldByName(ribbon(i, record)).String())
 		if err != nil {
 			return "", err
 		}
@@ -396,6 +406,20 @@ func article(
 	return sb.String(), nil
 }
 
+func ribbon(i int, record *Record) string {
+	var number = 1
+
+	if i == 2 {
+		if record.IsAwaking() {
+			number = 2
+		} else if record.IsOtherwise() {
+			number = 3
+		}
+	}
+
+	return fmt.Sprintf("Ribbon%d", number)
+}
+
 func detail(
 	setting *Setting,
 	format *application.Format,
@@ -430,7 +454,15 @@ func detail(
 		}
 
 		if profile == 2 {
-			url.WriteString(icon.Awaking)
+			var additional = ""
+
+			if record.IsAwaking() {
+				additional = icon.Awaking
+			} else if record.IsOtherwise() {
+				additional = icon.Otherwise
+			}
+
+			url.WriteString(additional)
 			if err != nil {
 				return "", err
 			}

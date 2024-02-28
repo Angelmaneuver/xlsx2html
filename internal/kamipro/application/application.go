@@ -61,6 +61,7 @@ type Parameter struct {
 type Icon struct {
 	BaseUrl                 string `toml:"base_url"`
 	Awaking                 string `toml:"awaking"`
+	Otherwise               string `toml:"otherwise"`
 	Extension               string `toml:"extension"`
 	NoDataDecisionCharacter string `toml:"no_data_decision_character"`
 }
@@ -103,6 +104,7 @@ type Main struct {
 	Close   string  `toml:"close"`
 	Ribbon1 string  `toml:"ribbon1"`
 	Ribbon2 string  `toml:"ribbon2"`
+	Ribbon3 string  `toml:"ribbon3"`
 	Profile Profile `toml:"Profile"`
 }
 
