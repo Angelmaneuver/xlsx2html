@@ -2,7 +2,6 @@ package generate
 
 import (
 	"fmt"
-	"math"
 	"os"
 	"reflect"
 	"strconv"
@@ -30,11 +29,14 @@ type Record struct {
 	Attack1          interface{} `mapstructure:"Attack1"`
 	HP2              interface{} `mapstructure:"HP2"`
 	Attack2          interface{} `mapstructure:"Attack2"`
+	HP3              interface{} `mapstructure:"HP3"`
+	Attack3          interface{} `mapstructure:"Attack3"`
 	EpisodeNumber    float64     `mapstructure:"エピソ－ド数"`
 	Awaking          string      `mapstructure:"神化覚醒"`
 	Otherwise        string      `mapstructure:"神想真化"`
 	Profile1         string      `mapstructure:"プロフィ－ル1"`
 	Profile2         string      `mapstructure:"プロフィ－ル2"`
+	Profile3         string      `mapstructure:"プロフィ－ル3"`
 	Ability1         string      `mapstructure:"アビリティ1"`
 	Effect1          string      `mapstructure:"効果1"`
 	Interval1        string      `mapstructure:"使用間隔1"`
@@ -63,6 +65,10 @@ type Record struct {
 	Outline3         string      `mapstructure:"あらすじ3"`
 	Contents3        string      `mapstructure:"内容3"`
 	Tag3             string      `mapstructure:"タグ3"`
+	Episode4         string      `mapstructure:"エピソ－ド4"`
+	Outline4         string      `mapstructure:"あらすじ4"`
+	Contents4        string      `mapstructure:"内容4"`
+	Tag4             string      `mapstructure:"タグ4"`
 	Html1            string      `mapstructure:"HTML1"`
 	HtmlDestination1 string      `mapstructure:"HTML設定先1"`
 	Html2            string      `mapstructure:"HTML2"`
@@ -118,6 +124,115 @@ func (r Record) IsGet() bool {
 	return r.GetFlag == "TRUE"
 }
 
+func (r Record) GetNormalSet(
+	setting *Setting,
+	format *application.Format,
+	icon *application.Icon,
+) ArticleSet {
+	episodes := []Episode{{
+		Title:    r.Episode1,
+		Outline:  r.Outline1,
+		Contents: r.Contents1,
+		Tag:      r.Tag1,
+	}}
+
+	if r.EpisodeNumber > 1 {
+		episodes = append(episodes, Episode{
+			Title:    r.Episode2,
+			Outline:  r.Outline2,
+			Contents: r.Contents2,
+			Tag:      r.Tag2,
+		})
+	}
+
+	return ArticleSet{
+		Type:     Normal,
+		Hp:       r.HP1,
+		Attack:   r.Attack1,
+		Profile:  r.Profile1,
+		Icon:     fmt.Sprintf(format.Article.Main.Profile.Detail.Icon1, icon.BaseUrl+fmt.Sprintf(setting.Icon, r.No)+icon.Extension),
+		Episodes: episodes,
+	}
+}
+
+func (r Record) GetAwakingSet(
+	setting *Setting,
+	format *application.Format,
+	icon *application.Icon,
+) *ArticleSet {
+	if r.EpisodeNumber < 3 || !r.IsAwaking() {
+		return nil
+	} else {
+		temporary := format.Article.Main.Profile.Detail.Icon2
+
+		if r.Episode3 != icon.NoDataDecisionCharacter {
+			temporary = fmt.Sprintf(format.Article.Main.Profile.Detail.Icon1, icon.BaseUrl+fmt.Sprintf(setting.Icon, r.No)+icon.Awaking+icon.Extension)
+		}
+
+		return &ArticleSet{
+			Type:    Awaking,
+			Hp:      r.HP2,
+			Attack:  r.Attack2,
+			Profile: r.Profile2,
+			Icon:    temporary,
+			Episodes: []Episode{{
+				Title:    r.Episode3,
+				Outline:  r.Outline3,
+				Contents: r.Contents3,
+				Tag:      r.Tag3,
+			}},
+		}
+	}
+}
+
+func (r Record) GetOtherwiseSet(
+	setting *Setting,
+	format *application.Format,
+	icon *application.Icon,
+) *ArticleSet {
+	temporary := format.Article.Main.Profile.Detail.Icon2
+
+	if r.EpisodeNumber < 3 || !r.IsOtherwise() {
+		return nil
+	} else if r.IsAwaking() {
+		if r.Episode4 != icon.NoDataDecisionCharacter {
+			temporary = fmt.Sprintf(format.Article.Main.Profile.Detail.Icon1, icon.BaseUrl+fmt.Sprintf(setting.Icon, r.No)+icon.Otherwise+icon.Extension)
+		}
+
+		return &ArticleSet{
+			Type:    Otherwise,
+			Hp:      r.HP3,
+			Attack:  r.Attack3,
+			Profile: r.Profile3,
+			Icon:    temporary,
+			Episodes: []Episode{{
+				Title:    r.Episode4,
+				Outline:  r.Outline4,
+				Contents: r.Contents4,
+				Tag:      r.Tag4,
+			}},
+		}
+	} else {
+		if r.Episode3 != icon.NoDataDecisionCharacter {
+			temporary = fmt.Sprintf(format.Article.Main.Profile.Detail.Icon1, icon.BaseUrl+fmt.Sprintf(setting.Icon, r.No)+icon.Otherwise+icon.Extension)
+		}
+
+		return &ArticleSet{
+			Type:    Otherwise,
+			Hp:      r.HP2,
+			Attack:  r.Attack2,
+			Profile: r.Profile2,
+			Icon:    temporary,
+			Episodes: []Episode{{
+				Title:    r.Episode3,
+				Outline:  r.Outline3,
+				Contents: r.Contents3,
+				Tag:      r.Tag3,
+			}},
+		}
+	}
+}
+
 type Threshold struct {
 	High Value
 	Low  Value
@@ -148,6 +263,31 @@ func (t Threshold) Html(value string) string {
 	} else {
 		return valueWithZeroPadding
 	}
+}
+
+type Type int
+
+const (
+	_ Type = iota
+	Normal
+	Awaking
+	Otherwise
+)
+
+type ArticleSet struct {
+	Type     Type
+	Hp       interface{}
+	Attack   interface{}
+	Profile  string
+	Icon     string
+	Episodes []Episode
+}
+
+type Episode struct {
+	Title    string
+	Outline  string
+	Contents string
+	Tag      string
 }
 
 func Start(
@@ -275,12 +415,52 @@ func convert(
 		}
 	}
 
-	article, err := article(setting, &html.Format, &html.Icon, hp, attack, record)
+	_, err := sb.WriteString(fmt.Sprintf(html.Format.Article.Start, record.Name))
 	if err != nil {
 		return headlines, err
 	}
 
-	_, err = sb.WriteString(article)
+	dataset, err := article(&html.Format, hp, attack, record, record.GetNormalSet(
+		setting,
+		&html.Format,
+		&html.Icon,
+	))
+	if err != nil {
+		return headlines, err
+	}
+
+	_, err = sb.WriteString(dataset)
+	if err != nil {
+		return headlines, err
+	}
+
+	awaking := record.GetAwakingSet(setting, &html.Format, &html.Icon)
+	if awaking != nil {
+		dataset, err = article(&html.Format, hp, attack, record, *awaking)
+		if err != nil {
+			return headlines, err
+		}
+
+		_, err = sb.WriteString(dataset)
+		if err != nil {
+			return headlines, err
+		}
+	}
+
+	otherwise := record.GetOtherwiseSet(setting, &html.Format, &html.Icon)
+	if otherwise != nil {
+		dataset, err = article(&html.Format, hp, attack, record, *otherwise)
+		if err != nil {
+			return headlines, err
+		}
+
+		_, err = sb.WriteString(dataset)
+		if err != nil {
+			return headlines, err
+		}
+	}
+
+	_, err = sb.WriteString(html.Format.Article.Close)
 	if err != nil {
 		return headlines, err
 	}
@@ -316,89 +496,70 @@ func headline(format *string, _headlines []string, name string) (string, []strin
 }
 
 func article(
-	setting *Setting,
 	format *application.Format,
-	icon *application.Icon,
 	hp *Threshold,
 	attack *Threshold,
 	record *Record,
+	dataset ArticleSet,
 ) (string, error) {
-	remainEpisodes := int(record.EpisodeNumber)
-	profiles := math.Floor(record.EpisodeNumber/2) + math.Mod(record.EpisodeNumber, 2)
 	var sb strings.Builder
 
-	_, err := sb.WriteString(fmt.Sprintf(format.Article.Start, record.Name))
+	_, err := sb.WriteString(format.Article.Main.Start)
 	if err != nil {
 		return "", err
 	}
 
-	for i := 1; i <= int(profiles); i++ {
-		_, err := sb.WriteString(format.Article.Main.Start)
-		if err != nil {
-			return "", err
-		}
+	_, err = sb.WriteString(reflect.ValueOf(format.Article.Main).FieldByName(fmt.Sprintf("Ribbon%d", dataset.Type)).String())
+	if err != nil {
+		return "", err
+	}
 
-		_, err = sb.WriteString(reflect.ValueOf(format.Article.Main).FieldByName(ribbon(i, record)).String())
-		if err != nil {
-			return "", err
-		}
+	_, err = sb.WriteString(format.Article.Main.Profile.Start)
+	if err != nil {
+		return "", err
+	}
 
-		_, err = sb.WriteString(format.Article.Main.Profile.Start)
-		if err != nil {
-			return "", err
-		}
+	detail, err := detail(format, hp, attack, record, dataset)
+	if err != nil {
+		return "", err
+	}
 
-		html, err := detail(setting, format, icon, hp, attack, record, i, remainEpisodes)
-		if err != nil {
-			return "", err
-		}
+	_, err = sb.WriteString(detail)
+	if err != nil {
+		return "", err
+	}
 
-		_, err = sb.WriteString(html)
-		if err != nil {
-			return "", err
-		}
+	_, err = sb.WriteString(format.Article.Main.Profile.Episode.Start)
+	if err != nil {
+		return "", err
+	}
 
-		_, err = sb.WriteString(format.Article.Main.Profile.Episode.Start)
-		if err != nil {
-			return "", err
-		}
-
-		for j := 0; 0 < remainEpisodes && j < 2; j++ {
-			index := i + int(math.Floor(float64(i)/2)) + j
-
-			_, err := sb.WriteString(
-				fmt.Sprintf(
-					format.Article.Main.Profile.Episode.Content,
-					reflect.ValueOf(*record).FieldByName(fmt.Sprintf("Episode%d", index)).String(),
-					reflect.ValueOf(*record).FieldByName(fmt.Sprintf("Tag%d", index)).String(),
-					reflect.ValueOf(*record).FieldByName(fmt.Sprintf("Contents%d", index)).String(),
-					reflect.ValueOf(*record).FieldByName(fmt.Sprintf("Outline%d", index)).String(),
-				),
-			)
-			if err != nil {
-				return "", err
-			}
-
-			remainEpisodes -= 1
-		}
-
-		_, err = sb.WriteString(format.Article.Main.Profile.Episode.Close)
-		if err != nil {
-			return "", err
-		}
-
-		_, err = sb.WriteString(format.Article.Main.Profile.Close)
-		if err != nil {
-			return "", err
-		}
-
-		_, err = sb.WriteString(format.Article.Main.Close)
+	for _, episode := range dataset.Episodes {
+		_, err := sb.WriteString(
+			fmt.Sprintf(
+				format.Article.Main.Profile.Episode.Content,
+				episode.Title,
+				episode.Tag,
+				episode.Contents,
+				episode.Outline,
+			),
+		)
 		if err != nil {
 			return "", err
 		}
 	}
 
-	_, err = sb.WriteString(format.Article.Close)
+	_, err = sb.WriteString(format.Article.Main.Profile.Episode.Close)
+	if err != nil {
+		return "", err
+	}
+
+	_, err = sb.WriteString(format.Article.Main.Profile.Close)
+	if err != nil {
+		return "", err
+	}
+
+	_, err = sb.WriteString(format.Article.Main.Close)
 	if err != nil {
 		return "", err
 	}
@@ -406,31 +567,13 @@ func article(
 	return sb.String(), nil
 }
 
-func ribbon(i int, record *Record) string {
-	var number = 1
-
-	if i == 2 {
-		if record.IsAwaking() {
-			number = 2
-		} else if record.IsOtherwise() {
-			number = 3
-		}
-	}
-
-	return fmt.Sprintf("Ribbon%d", number)
-}
-
 func detail(
-	setting *Setting,
 	format *application.Format,
-	icon *application.Icon,
 	hp *Threshold,
 	attack *Threshold,
 	record *Record,
-	profile int,
-	remainEpisodes int,
+	dataset ArticleSet,
 ) (string, error) {
-	var html string
 	var sb strings.Builder
 
 	_, err := sb.WriteString(format.Article.Main.Profile.Detail.Start)
@@ -438,45 +581,7 @@ func detail(
 		return "", err
 	}
 
-	if profile == 2 && record.Episode3 == icon.NoDataDecisionCharacter {
-		html = format.Article.Main.Profile.Detail.Icon2
-	} else {
-		var url strings.Builder
-
-		url.WriteString(icon.BaseUrl)
-		if err != nil {
-			return "", err
-		}
-
-		url.WriteString(fmt.Sprintf(setting.Icon, record.No))
-		if err != nil {
-			return "", err
-		}
-
-		if profile == 2 {
-			var additional = ""
-
-			if record.IsAwaking() {
-				additional = icon.Awaking
-			} else if record.IsOtherwise() {
-				additional = icon.Otherwise
-			}
-
-			url.WriteString(additional)
-			if err != nil {
-				return "", err
-			}
-		}
-
-		url.WriteString(icon.Extension)
-		if err != nil {
-			return "", err
-		}
-
-		html = fmt.Sprintf(format.Article.Main.Profile.Detail.Icon1, url.String())
-	}
-
-	_, err = sb.WriteString(html)
+	_, err = sb.WriteString(dataset.Icon)
 	if err != nil {
 		return "", err
 	}
@@ -487,19 +592,17 @@ func detail(
 	}
 
 	var hpString string
-	hpParameter := reflect.ValueOf(*record).FieldByName(fmt.Sprintf("HP%d", profile)).Interface()
-	switch hpParameter := hpParameter.(type) {
+	switch parameter := dataset.Hp.(type) {
 	case string:
-		hpString = hpParameter
+		hpString = parameter
 	case int:
-		hpString = strconv.Itoa(hpParameter)
+		hpString = strconv.Itoa(parameter)
 	default:
 		return "", err
 	}
 
 	var attackString string
-	attackParameter := reflect.ValueOf(*record).FieldByName(fmt.Sprintf("Attack%d", profile)).Interface()
-	switch attackParameter := attackParameter.(type) {
+	switch attackParameter := dataset.Attack.(type) {
 	case string:
 		attackString = attackParameter
 	case int:
@@ -524,7 +627,7 @@ func detail(
 	_, err = sb.WriteString(
 		fmt.Sprintf(
 			format.Article.Main.Profile.Detail.Personal.Profile,
-			hp.Html(reflect.ValueOf(*record).FieldByName(fmt.Sprintf("Profile%d", profile)).String()),
+			dataset.Profile,
 		),
 	)
 	if err != nil {
@@ -536,7 +639,7 @@ func detail(
 		return "", err
 	}
 
-	sb.WriteString(format.Article.Main.Profile.Detail.Close)
+	_, err = sb.WriteString(format.Article.Main.Profile.Detail.Close)
 	if err != nil {
 		return "", err
 	}
